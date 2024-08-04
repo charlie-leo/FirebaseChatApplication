@@ -13,7 +13,7 @@
         android:theme="@style/Theme.FirebaseChatApplication"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".presenter.ui.onboarding.OnboardingActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.FirebaseChatApplication">
