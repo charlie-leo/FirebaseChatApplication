@@ -26,12 +26,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.datasource.RawResourceDataSource
 import androidx.navigation.compose.rememberNavController
 import com.firebase.chat.R
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.upstream.RawResourceDataSource
 
 /**
  * Created by Charles Raj I on 01/08/24
@@ -47,11 +47,11 @@ fun VideoPlayerScreen() {
 //    RawResourceDataSource.buildRawResourceUri(R.raw.video_1)
     Column {
 //            VerticalPager(state = pagerState ) { page ->
-                Player(
-                    modifier = Modifier
-                    .fillMaxWidth(),
-                    RawResourceDataSource.buildRawResourceUri(R.raw.video_1)
-                )
+//                Player(
+//                    modifier = Modifier
+//                    .fillMaxWidth(),
+//                    com.google.android.exoplayer2.upstream.RawResourceDataSource.buildRawResourceUri(R.raw.)
+//                )
 
 //                Player(
 //                    modifier = Modifier
