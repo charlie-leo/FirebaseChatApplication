@@ -70,7 +70,7 @@ fun SignUpScreen() {
                 horizontalAlignment = Alignment.Start
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.chat_u_logo),
+                    painter = painterResource(id = R.drawable.chat_logo),
                     contentDescription = "chat u logo",
                     modifier = Modifier
                         .width(150.dp)
