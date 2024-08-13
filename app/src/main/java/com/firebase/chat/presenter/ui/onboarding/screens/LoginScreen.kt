@@ -12,11 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,10 +23,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.firebase.chat.R
+import com.firebase.chat.presenter.ui.onboarding.OnboardingEvents
 import com.firebase.chat.ui.util.HeightSpacer
 import com.firebase.chat.ui.util.MobileNumberTextField
-import com.firebase.chat.ui.util.ThemeButton
 import com.firebase.chat.ui.util.ThemeSolidButton
 import com.firebase.chat.ui.util.WidthSpacer
 
@@ -40,7 +38,7 @@ import com.firebase.chat.ui.util.WidthSpacer
  * @author Charles Raj
  */
 @Composable
-fun LoginScreen() {
+fun LoginScreen(navController: NavHostController, kFunction1: (OnboardingEvents) -> Unit) {
 
 
     BoxWithConstraints(
@@ -140,7 +138,8 @@ fun LoginScreen() {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun LoginScreenPreview() {
-    LoginScreen()
+    val navController = rememberNavController()
+    LoginScreen(navController, onboardingViewModel::action)
 }
 
 

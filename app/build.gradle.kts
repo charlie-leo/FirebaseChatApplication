@@ -1,6 +1,11 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.google.gms.google.services)
+    kotlin("kapt")
+    id("kotlin-android")
+    id("dagger.hilt.android.plugin")
+    kotlin("plugin.serialization") version "1.9.24"
 }
 
 android {
@@ -61,6 +66,14 @@ dependencies {
     implementation(libs.androidx.material3)
 
     implementation ("com.google.android.exoplayer:exoplayer:2.15.1")
+    implementation(libs.firebase.auth)
+    implementation(libs.androidx.navigation.compose)
+
+
+    implementation ("com.google.dagger:hilt-android:2.45")
+    implementation(libs.firebase.database) // Replace with the latest version
+    kapt ("com.google.dagger:hilt-compiler:2.45") // Replace with the latest version
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

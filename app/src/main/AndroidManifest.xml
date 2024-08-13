@@ -10,6 +10,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:name=".presenter.ui.FirebaseApp"
         android:theme="@style/Theme.FirebaseChatApplication"
         tools:targetApi="31">
         <activity

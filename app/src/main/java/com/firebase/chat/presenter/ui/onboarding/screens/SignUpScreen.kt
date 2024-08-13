@@ -2,6 +2,7 @@ package com.firebase.chat.presenter.ui.onboarding.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -12,11 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,7 +28,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.firebase.chat.R
+import com.firebase.chat.data.model.UserModel
+import com.firebase.chat.presenter.ui.onboarding.OnboardingEvents
+import com.firebase.chat.presenter.ui.onboarding.OnboardingNavigationObject
 import com.firebase.chat.ui.util.HeightSpacer
 import com.firebase.chat.ui.util.LeadingIconTextField
 import com.firebase.chat.ui.util.MobileNumberTextField
@@ -39,7 +46,13 @@ import com.firebase.chat.ui.util.WidthSpacer
  * @author Charles Raj
  */
 @Composable
-fun SignUpScreen() {
+fun SignUpScreen(navController: NavHostController,
+                 action: (OnboardingEvents) -> Unit) {
+
+    var userModel by remember {
+
+        mutableStateOf(UserModel())
+    }
 
     BoxWithConstraints(
         modifier = Modifier
@@ -91,13 +104,22 @@ fun SignUpScreen() {
                 HeightSpacer(height = 60.dp)
 
 
-                LeadingIconTextField(label = "User Name", value = "", valueChange = {}, leadingIcon = R.drawable.person_icon)
+                LeadingIconTextField(label = "User Name",
+                    value = userModel.userName ?: "", valueChange = {
+                        userModel = userModel.copy(
+                            userName = it
+                        )
+                    },
+                    leadingIcon = R.drawable.person_icon)
 
                 HeightSpacer(height = 10.dp)
 
                 MobileNumberTextField(
                     label = "Mobile Number",
-                    value = "" ) {
+                    value = userModel?.mobileNumber ?: "" ) {
+                    userModel = userModel.copy(
+                        mobileNumber = it
+                    )
                 }
 
                 HeightSpacer(height = 20.dp)
@@ -108,6 +130,9 @@ fun SignUpScreen() {
                     fontSize = 16.sp,
                     textAlign = TextAlign.End,
                     modifier = Modifier.fillMaxWidth()
+                        .clickable {
+                            navController.navigate(OnboardingNavigationObject.LOGIN_SCREEN)
+                        }
                 )
 
                 HeightSpacer(height = 20.dp)
@@ -125,7 +150,7 @@ fun SignUpScreen() {
                             .fillMaxWidth(fraction = 0.6f)
 //                            .weight(0.5f)
                     ) {
-
+                        action(OnboardingEvents.SignUpClick(userModel))
                     }
                 }
                 HeightSpacer(height = 20.dp)
@@ -139,5 +164,6 @@ fun SignUpScreen() {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun SignUpScreenPreview() {
-    SignUpScreen()
+    val navController = rememberNavController()
+//    SignUpScreen(navController, onboardingViewModel::action)
 }

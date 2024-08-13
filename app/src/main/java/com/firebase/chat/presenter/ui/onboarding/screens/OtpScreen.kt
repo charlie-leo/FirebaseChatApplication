@@ -23,10 +23,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.firebase.chat.R
 import com.firebase.chat.ui.util.HeightSpacer
 import com.firebase.chat.ui.util.LeadingIconTextField
-import com.firebase.chat.ui.util.MobileNumberTextField
 import com.firebase.chat.ui.util.ThemeSolidButton
 import com.firebase.chat.ui.util.WidthSpacer
 
@@ -36,7 +37,7 @@ import com.firebase.chat.ui.util.WidthSpacer
  * @author Charles Raj
  */
 @Composable
-fun OtpScreen() {
+fun OtpScreen(navController: NavHostController) {
 
 
     BoxWithConstraints(
@@ -134,5 +135,6 @@ fun OtpScreen() {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun OtpScreenPreview() {
-    OtpScreen()
+    val navController = rememberNavController()
+    OtpScreen(navController)
 }
