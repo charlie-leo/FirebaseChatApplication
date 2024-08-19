@@ -14,6 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,10 +27,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.text.isDigitsOnly
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.firebase.chat.R
+import com.firebase.chat.data.model.UserModel
 import com.firebase.chat.presenter.ui.onboarding.OnboardingEvents
+import com.firebase.chat.presenter.ui.onboarding.OnboardingNavigationObject
 import com.firebase.chat.ui.util.HeightSpacer
 import com.firebase.chat.ui.util.MobileNumberTextField
 import com.firebase.chat.ui.util.ThemeSolidButton
@@ -38,7 +45,11 @@ import com.firebase.chat.ui.util.WidthSpacer
  * @author Charles Raj
  */
 @Composable
-fun LoginScreen(navController: NavHostController, kFunction1: (OnboardingEvents) -> Unit) {
+fun LoginScreen(navController: NavHostController, action: (OnboardingEvents) -> Unit) {
+
+    var userModel by remember {
+        mutableStateOf(UserModel())
+    }
 
 
     BoxWithConstraints(
@@ -92,8 +103,13 @@ fun LoginScreen(navController: NavHostController, kFunction1: (OnboardingEvents)
 
                 MobileNumberTextField(
                     label = "Mobile Number",
-                    value = "" ) {
+                    value = userModel.mobileNumber ?: "" ) {
 
+                    if (it.isDigitsOnly() && it.length <= 10){
+                        userModel = userModel.copy(
+                            mobileNumber = it
+                        )
+                    }
                 }
 
                 HeightSpacer(height = 20.dp)
@@ -121,7 +137,13 @@ fun LoginScreen(navController: NavHostController, kFunction1: (OnboardingEvents)
                             .fillMaxWidth(fraction = 0.6f)
 //                            .weight(0.5f)
                     ) {
-
+                        if (userModel.mobileNumber?.length == 10) {
+                            action(OnboardingEvents.LoginUpClick(userModel) { status ->
+                                if (status) {
+                                    navController.navigate(OnboardingNavigationObject.OTP_SCREEN)
+                                }
+                            })
+                        }
                     }
                 }
                 HeightSpacer(height = 20.dp)
@@ -139,7 +161,7 @@ fun LoginScreen(navController: NavHostController, kFunction1: (OnboardingEvents)
 @Composable
 fun LoginScreenPreview() {
     val navController = rememberNavController()
-    LoginScreen(navController, onboardingViewModel::action)
+//    LoginScreen(navController, onboardingViewModel::action)
 }
 
 

@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "758867396909",
+    "firebase_url": "https://fir-chatapplication-a42cc-default-rtdb.firebaseio.com",
     "project_id": "fir-chatapplication-a42cc",
     "storage_bucket": "fir-chatapplication-a42cc.appspot.com"
   },

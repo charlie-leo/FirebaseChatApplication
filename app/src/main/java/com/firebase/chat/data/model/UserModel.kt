@@ -5,4 +5,9 @@ package com.firebase.chat.data.model
  * @project FirebaseChatApplication
  * @author Charles Raj
  */
-data class UserModel(val userId : Int = 0, val userName: String? = null, val mobileNumber: String? = null)
+data class UserModel(
+    val userId : String? = "",
+    val userName: String? = null,
+    val profileImage : String? = null,
+    val mobileNumber: String? = null
+)

@@ -1,15 +1,12 @@
 package com.firebase.chat.presenter.ui.main.screen
 
-import android.graphics.drawable.GradientDrawable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,20 +20,22 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.firebase.chat.R
-import com.firebase.chat.presenter.ui.onboarding.screens.OtpScreen
+import com.firebase.chat.data.model.UserModel
+import com.firebase.chat.presenter.ui.main.MainActivityNavigationNames
+import com.firebase.chat.presenter.ui.main.event.MainScreenAction
+import com.firebase.chat.presenter.ui.main.event.MainScreenEvent
 import com.firebase.chat.ui.theme.Black
 import com.firebase.chat.ui.theme.White
 import com.firebase.chat.ui.util.HeightSpacer
@@ -49,7 +48,11 @@ import com.firebase.chat.ui.util.WidthSpacer
  * @author Charles Raj
  */
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    navController: NavHostController,
+    mainScreenEvent: State<MainScreenEvent>,
+    action: (MainScreenAction) -> Unit
+) {
 
     BoxWithConstraints(
         modifier = Modifier
@@ -95,11 +98,18 @@ fun MainScreen() {
                     .padding(horizontal = 20.dp)
             )
             HeightSpacer()
-            LazyColumn {
-                items(2){ index ->
-                    ChatItem()
+            mainScreenEvent.value.userList?.let { list ->
+                LazyColumn {
+                    items(list.size){ index ->
+                    val userItem = list[index]
+                    ChatItem(userItem){
+                        action(MainScreenAction.SelectUser(userItem))
+                        navController.navigate(MainActivityNavigationNames.CHAT_SCREEN)
+                    }
+                }
                 }
             }
+
         }
 
 
@@ -123,10 +133,14 @@ fun MainScreen() {
 
 
 @Composable
-fun ChatItem() {
+fun ChatItem(userItem: UserModel, onClick: () -> Unit) {
     Column (
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable {
+                onClick()
+            }
+        ,
         verticalArrangement = Arrangement.Bottom
     ){
 
@@ -158,7 +172,7 @@ fun ChatItem() {
                         .padding(top = 10.dp)
                 ) {
                     Text(
-                        text = "Jennifer Blaze",
+                        text = userItem.userName ?: "",
                         fontSize = 20.sp,
                         color = White
                     )
@@ -197,5 +211,5 @@ fun ChatItem() {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun MainScreenPreview() {
-    MainScreen()
+//    MainScreen(mainActivityViewModel.userList.collectAsState())
 }

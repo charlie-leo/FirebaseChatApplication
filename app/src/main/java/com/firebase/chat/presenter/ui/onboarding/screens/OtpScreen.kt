@@ -1,5 +1,6 @@
 package com.firebase.chat.presenter.ui.onboarding.screens
 
+import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -14,18 +15,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.text.isDigitsOnly
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.firebase.chat.presenter.ui.main.MainActivity
 import com.firebase.chat.R
+import com.firebase.chat.presenter.ui.onboarding.OnboardingEvents
 import com.firebase.chat.ui.util.HeightSpacer
 import com.firebase.chat.ui.util.LeadingIconTextField
 import com.firebase.chat.ui.util.ThemeSolidButton
@@ -37,7 +44,13 @@ import com.firebase.chat.ui.util.WidthSpacer
  * @author Charles Raj
  */
 @Composable
-fun OtpScreen(navController: NavHostController) {
+fun OtpScreen(navController: NavHostController, action: (OnboardingEvents) -> Unit) {
+
+    val context = LocalContext.current
+
+    val otpText = remember {
+        mutableStateOf("")
+    }
 
 
     BoxWithConstraints(
@@ -91,7 +104,11 @@ fun OtpScreen(navController: NavHostController) {
 
 
                 LeadingIconTextField(label = "OTP",
-                    value = "", valueChange = {},
+                    value = otpText.value, valueChange = {
+                        if (it.isDigitsOnly() && it.length <= 6){
+                            otpText.value = it
+                        }
+                    },
                     leadingIcon = R.drawable.finger_print_icon)
 
 
@@ -121,7 +138,13 @@ fun OtpScreen(navController: NavHostController) {
                             .fillMaxWidth(fraction = 0.6f)
 //                            .weight(0.5f)
                     ) {
+                        action(OnboardingEvents.OtpVerificationClick(otpText.value){ status ->
+                            if (status) {
+                                context.startActivity(Intent(context, MainActivity::class.java).apply {
 
+                                })
+                            }
+                        })
                     }
                 }
                 HeightSpacer(height = 20.dp)
@@ -136,5 +159,5 @@ fun OtpScreen(navController: NavHostController) {
 @Composable
 fun OtpScreenPreview() {
     val navController = rememberNavController()
-    OtpScreen(navController)
+//    OtpScreen(navController, onboardingViewModel::action)
 }

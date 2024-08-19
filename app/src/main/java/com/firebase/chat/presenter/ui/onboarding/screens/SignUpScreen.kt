@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.text.isDigitsOnly
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.firebase.chat.R
@@ -116,16 +117,19 @@ fun SignUpScreen(navController: NavHostController,
 
                 MobileNumberTextField(
                     label = "Mobile Number",
-                    value = userModel?.mobileNumber ?: "" ) {
-                    userModel = userModel.copy(
-                        mobileNumber = it
-                    )
+                    value = userModel.mobileNumber ?: "" ) {
+
+                    if (it.isDigitsOnly() && it.length <= 10){
+                        userModel = userModel.copy(
+                            mobileNumber = it
+                        )
+                    }
                 }
 
                 HeightSpacer(height = 20.dp)
 
                 Text(
-                    text = "Sign Up",
+                    text = "LogIn",
                     color = Color.White,
                     fontSize = 16.sp,
                     textAlign = TextAlign.End,
@@ -150,7 +154,11 @@ fun SignUpScreen(navController: NavHostController,
                             .fillMaxWidth(fraction = 0.6f)
 //                            .weight(0.5f)
                     ) {
-                        action(OnboardingEvents.SignUpClick(userModel))
+                        action(OnboardingEvents.SignUpClick(userModel){ status ->
+                            if (status) {
+                                navController.navigate(OnboardingNavigationObject.OTP_SCREEN)
+                            }
+                        })
                     }
                 }
                 HeightSpacer(height = 20.dp)

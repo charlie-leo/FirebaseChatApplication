@@ -5,7 +5,9 @@ plugins {
     kotlin("kapt")
     id("kotlin-android")
     id("dagger.hilt.android.plugin")
-    kotlin("plugin.serialization") version "1.9.24"
+//    id("kotlinx-serialization")
+    kotlin("plugin.serialization") version "1.9.0"
+    id("kotlin-parcelize")
 }
 
 android {
@@ -74,6 +76,8 @@ dependencies {
     implementation(libs.firebase.database) // Replace with the latest version
     kapt ("com.google.dagger:hilt-compiler:2.45") // Replace with the latest version
 
+//    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,7 +37,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.firebase.chat.R
+import com.firebase.chat.presenter.ui.main.event.MainScreenAction
+import com.firebase.chat.presenter.ui.main.event.MainScreenEvent
 import com.firebase.chat.ui.theme.White
 import com.firebase.chat.ui.util.HeightSpacer
 import com.firebase.chat.ui.util.ImageCircle
@@ -48,7 +52,11 @@ import com.firebase.chat.ui.util.WidthSpacer
  * @author Charles Raj
  */
 @Composable
-fun ChatScreen() {
+fun ChatScreen(
+    navController: NavHostController,
+    mainScreenEvent: State<MainScreenEvent>,
+    action: (MainScreenAction) -> Unit
+) {
 
 
     Column (
@@ -82,7 +90,7 @@ fun ChatScreen() {
                     WidthSpacer()
                     ImageCircle(size = 45.dp)
                     WidthSpacer(width = 15.dp)
-                    Text(text = "Jennifer Blaze", color = White, fontSize = 20.sp)
+                    Text(text = mainScreenEvent.value.selectedUser?.userName ?: "", color = White, fontSize = 20.sp)
                 }
 
                 Icon(
@@ -249,5 +257,5 @@ fun ReceiveChatItem(){
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ChatScreenPreview() {
-    ChatScreen()
+//    ChatScreen()
 }
