@@ -1,5 +1,6 @@
 package com.firebase.chat.presenter.ui.main.event
 
+import com.firebase.chat.data.model.MessageModel
 import com.firebase.chat.data.model.UserModel
 
 /**
@@ -11,5 +12,7 @@ data class MainScreenEvent(
     val currentUser: UserModel? = null,
     val selectedUser: UserModel? = null,
     val userList : MutableList<UserModel>? = null,
-    val currentChatId : String? = null
+    val currentChatId : String? = null,
+
+    val messagesList : List<MessageModel>? = null,
 )

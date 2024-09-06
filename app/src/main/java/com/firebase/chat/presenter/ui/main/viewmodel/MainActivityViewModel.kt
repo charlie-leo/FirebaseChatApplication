@@ -7,17 +7,24 @@ import com.firebase.chat.data.model.UserModel
 import com.firebase.chat.presenter.ui.main.event.MainScreenAction
 import com.firebase.chat.presenter.ui.main.event.MainScreenEvent
 import com.firebase.chat.ui.util.SnackBarState
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Created by Charles Raj I on 17/08/24
@@ -32,17 +39,23 @@ class MainActivityViewModel : ViewModel() {
     private val _snackBarState = MutableStateFlow(SnackBarState())
     val snackBarState: StateFlow<SnackBarState> = _snackBarState.asStateFlow()
 
-    private val _mainScreenEvent = MutableStateFlow(MainScreenEvent(
-        currentUser = UserModel(
-            mobileNumber = currentUser?.phoneNumber,
-            userId = currentUser?.uid
+    val chatViewModel: ChatViewModel = ChatViewModel()
+
+
+    private val _mainScreenEvent = MutableStateFlow(
+        MainScreenEvent(
+            currentUser = UserModel(
+                mobileNumber = currentUser?.phoneNumber,
+                userId = currentUser?.uid
+            )
         )
-    ))
+    )
     val mainScreenEvent: StateFlow<MainScreenEvent> = _mainScreenEvent.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+//    var chatJob = CompletableJob()
 
     init {
 
@@ -50,52 +63,54 @@ class MainActivityViewModel : ViewModel() {
     }
 
 
-    fun action(event: MainScreenAction){
+    fun action(event: MainScreenAction) {
         _isLoading.value = true
-        when(event){
+        when (event) {
             is MainScreenAction.SelectUser -> initChat(event)
+            is MainScreenAction.SendMessage -> chatViewModel.sendMessage(event.message){
+                _isLoading.value = false
+                event.callBack(it)
+            }
         }
     }
 
 
     private fun loadUserList() {
         _isLoading.value = true
-        viewModelScope.launch (Dispatchers.IO) {
-            if (currentUser == null ){
+        viewModelScope.launch(Dispatchers.IO) {
+            if (currentUser == null) {
                 return@launch
             }
-            databaseRef.getReference("users").addListenerForSingleValueEvent(object : ValueEventListener{
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val list = mutableListOf<UserModel>()
-                    Log.d("TAG", "onDataChange: ${snapshot.children.count()}")
-                    for (userSnapshot in snapshot.children){
-                        val userModel = userSnapshot.getValue(UserModel::class.java)
-                        userModel?.let {
-                            if (it.userId != currentUser.uid) {
-                                list.add(it)
+            databaseRef.getReference("users")
+                .addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val list = mutableListOf<UserModel>()
+                        Log.d("TAG", "onDataChange: ${snapshot.children.count()}")
+                        for (userSnapshot in snapshot.children) {
+                            val userModel = userSnapshot.getValue(UserModel::class.java)
+                            userModel?.let {
+                                if (it.userId != currentUser.uid) {
+                                    list.add(it)
+                                }
                             }
                         }
+                        Log.d("TAG", "onDataChange: ${list.toMutableList().size}")
+                        _mainScreenEvent.value = _mainScreenEvent.value.copy(
+                            userList = list.toMutableList()
+                        )
+                        _isLoading.value = false
                     }
-                    Log.d("TAG", "onDataChange: ${list.toMutableList().size}")
-                    _mainScreenEvent.value = _mainScreenEvent.value.copy(
-                        userList = list.toMutableList()
-                    )
-                    _isLoading.value = false
-                }
 
-                override fun onCancelled(p0: DatabaseError) {
-                    _isLoading.value = false
-                    _snackBarState.value = _snackBarState.value.copy(
-                        show = true,
-                        isError = true,
-                        message = p0.message
-                    )
-                }
-            })
+                    override fun onCancelled(p0: DatabaseError) {
+                        _isLoading.value = false
+                        _snackBarState.value = _snackBarState.value.copy(
+                            show = true,
+                            isError = true,
+                            message = p0.message
+                        )
+                    }
+                })
         }
-
-
-
     }
 
 
@@ -104,68 +119,82 @@ class MainActivityViewModel : ViewModel() {
             selectedUser = event.userModel
         )
 
-        try{
-
+        try {
             viewModelScope.launch(Dispatchers.IO) {
-                databaseRef.getReference("chats")
-                    .addListenerForSingleValueEvent(object : ValueEventListener{
-                        override fun onDataChange(dataSnapshot: DataSnapshot) {
-                            if (dataSnapshot.hasChildren()){
-                                val chatQuery = dataSnapshot.ref.orderByChild("users/${_mainScreenEvent.value.currentUser?.userId}").equalTo(true)
 
-                               chatQuery.get().addOnSuccessListener { branchSnap ->
-                                    _isLoading.value = false
-                                    var chatId: String? = null
+                var dataSnapshot = databaseRef.getReference("chats").get().await()
 
-                                    for (chatSnapshot in  branchSnap.children){
-                                        val chatUsers = chatSnapshot.child("users").value as? Map<*, *>
-                                        if (chatUsers?.containsKey(event.userModel.userId) == true){
-                                            chatId = chatSnapshot.key
-                                            _mainScreenEvent.value = _mainScreenEvent.value.copy(
-                                                currentChatId = chatId
-                                            )
-                                            break
-                                        }
-                                    }
+                if (dataSnapshot.hasChildren()) {
+                    try {
+                        _isLoading.value = false
+                        var chatId: String? = null
 
-                                    if (chatId == null){
-                                        chatId = dataSnapshot.ref.push().key
-
-                                        val  chatData = mapOf(
-                                            "${_mainScreenEvent.value.currentUser?.userId}" to true,
-                                            "${event.userModel.userId}" to true,
-                                        )
-                                        dataSnapshot.ref.child(chatId ?: "").child("users").setValue(chatData)
-                                        _mainScreenEvent.value = _mainScreenEvent.value.copy(
-                                            currentChatId = chatId
-                                        )
-                                    }
-                                }
-                            } else {
-                                _isLoading.value = false
-                                val chatId = databaseRef.getReference("chats").push().key
-
-                                val  chatData = mapOf(
-                                    "${_mainScreenEvent.value.currentUser?.userId}" to true,
-                                    "${event.userModel.userId}" to true,
-                                )
-                                dataSnapshot.ref.child(chatId ?: "").child("users").setValue(chatData)
+                        for (chatSnapshot in dataSnapshot.children) {
+                            val chatUsers = chatSnapshot.child("users").value as? Map<*, *>
+                            if (chatUsers?.containsKey(event.userModel.userId) == true
+                                && chatUsers.containsKey(_mainScreenEvent.value.currentUser?.userId)) {
+                                chatId = chatSnapshot.key
                                 _mainScreenEvent.value = _mainScreenEvent.value.copy(
                                     currentChatId = chatId
                                 )
+                                chatViewModel.setChatId(chatId ?: "")
+                                chatViewModel.getMessages {
+                                    _mainScreenEvent.value = _mainScreenEvent.value.copy(
+                                        messagesList = it
+                                    )
+                                }
+                                break
                             }
                         }
 
-                        override fun onCancelled(p0: DatabaseError) {
-
-                            _isLoading.value = false
+                        if (chatId == null) {
+                            chatId = dataSnapshot.ref.push().key
+                            val chatData = mapOf(
+                                "${_mainScreenEvent.value.currentUser?.userId}" to true,
+                                "${event.userModel.userId}" to true,
+                            )
+                            dataSnapshot.ref.child(chatId ?: "").child("users").setValue(chatData)
+                            _mainScreenEvent.value = _mainScreenEvent.value.copy(
+                                currentChatId = chatId
+                            )
+                            chatViewModel.setChatId(chatId ?: "")
+                            chatViewModel.getMessages {
+                                _mainScreenEvent.value = _mainScreenEvent.value.copy(
+                                    messagesList = it
+                                )
+                            }
                         }
+                    } catch (ex: Exception) {
+                        Log.e("TAG", "onDataChange: ", ex)
+                    }
 
-                    })
+                } else {
+                    _isLoading.value = false
+                    val chatId = databaseRef.getReference("chats").push().key
 
+                    val chatData = mapOf(
+                        "${_mainScreenEvent.value.currentUser?.userId}" to true,
+                        "${event.userModel.userId}" to true,
+                    )
+                    dataSnapshot.ref.child(chatId ?: "").child("users").setValue(chatData)
+                    _mainScreenEvent.value = _mainScreenEvent.value.copy(
+                        currentChatId = chatId
+                    )
+                }
+
+//                databaseRef.getReference("chats")
+//                    .addListenerForSingleValueEvent(object : ValueEventListener{
+//                        override fun onDataChange(dataSnapshot: DataSnapshot) {
+//
+//                        }
+//
+//                        override fun onCancelled(p0: DatabaseError) {
+//                            _isLoading.value = false
+//                        }
+//                    })
 //                }
             }
-        }catch (e : Exception){
+        } catch (e: Exception) {
             _isLoading.value = false
             _snackBarState.value = _snackBarState.value.copy(
                 show = true,
@@ -174,6 +203,9 @@ class MainActivityViewModel : ViewModel() {
             )
         }
     }
+
+
+
 
     override fun onCleared() {
         super.onCleared()

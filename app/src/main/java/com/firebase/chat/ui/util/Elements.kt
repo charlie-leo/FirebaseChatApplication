@@ -41,6 +41,9 @@ import com.firebase.chat.ui.theme.White
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ui.PlayerView
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Created by Charles Raj I on 03/08/24
@@ -244,4 +247,10 @@ fun ImageCircle(size: Dp = 80.dp, image: Int = R.mipmap.dummy_profile) {
                 .fillMaxSize()
         )
     }
+}
+
+fun formatTimestamp(timestamp: Long) : String {
+    val dataFormat = SimpleDateFormat("h:mm a", Locale.ENGLISH)
+    val data = Date(timestamp)
+    return dataFormat.format(data)
 }

@@ -1,12 +1,13 @@
 package com.firebase.chat.presenter.ui.main.screen
 
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,15 +21,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,12 +38,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.firebase.chat.R
+import com.firebase.chat.data.model.MessageModel
 import com.firebase.chat.presenter.ui.main.event.MainScreenAction
 import com.firebase.chat.presenter.ui.main.event.MainScreenEvent
 import com.firebase.chat.ui.theme.White
 import com.firebase.chat.ui.util.HeightSpacer
 import com.firebase.chat.ui.util.ImageCircle
 import com.firebase.chat.ui.util.WidthSpacer
+import com.firebase.chat.ui.util.formatTimestamp
 
 /**
  * Created by Charles Raj I on 04/08/24
@@ -57,6 +58,12 @@ fun ChatScreen(
     mainScreenEvent: State<MainScreenEvent>,
     action: (MainScreenAction) -> Unit
 ) {
+
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current
+
+    val messageText = remember {
+        mutableStateOf("")
+    }
 
 
     Column (
@@ -85,7 +92,10 @@ fun ChatScreen(
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "",
-                        tint = White
+                        tint = White,
+                        modifier = Modifier.clickable {
+                            backDispatcher?.onBackPressedDispatcher?.onBackPressed()
+                        }
                     )
                     WidthSpacer()
                     ImageCircle(size = 45.dp)
@@ -112,11 +122,16 @@ fun ChatScreen(
                 .fillMaxWidth()
                 .weight(1f)
         ) {
-            item {
-                SendChatItem()
-            }
-            item { 
-                ReceiveChatItem()
+            mainScreenEvent.value.messagesList?.forEach { item ->
+                if (item.senderId == mainScreenEvent.value.currentUser?.userId){
+                    item {
+                        SendChatItem(item)
+                    }
+                } else {
+                    item {
+                        ReceiveChatItem(item)
+                    }
+                }
             }
         }
 
@@ -137,14 +152,17 @@ fun ChatScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
+                    value = messageText.value,
+                    onValueChange = {
+                        messageText.value = it
+                    },
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = White,
-                        focusedBorderColor = White
+                        focusedBorderColor = White,
+                        focusedTextColor = White
                     ),
                     modifier = Modifier
-                        .height(50.dp)
+                        .height(80.dp)
                         .weight(1f)
                     ,
                     shape = RoundedCornerShape(25.dp),
@@ -155,7 +173,13 @@ fun ChatScreen(
 
                 WidthSpacer()
 
-                Button(onClick = { /*TODO*/ },
+                Button(onClick = {
+                    action(MainScreenAction.SendMessage(messageText.value){
+                        if (it){
+                            messageText.value = ""
+                        }
+                    })
+                },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = White,
                         contentColor = Color.Black
@@ -185,7 +209,7 @@ fun ChatScreen(
 }
 
 @Composable
-fun SendChatItem(){
+fun SendChatItem(item: MessageModel) {
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
@@ -197,7 +221,7 @@ fun SendChatItem(){
                 .fillMaxWidth(fraction = 0.8f)
                 .align(Alignment.CenterEnd)
         ) {
-            Text(text = "Hey, I’m good. How about you",
+            Text(text = item.text?: "",
                 color = Color.Black,
                 textAlign = TextAlign.End,
                 modifier = Modifier
@@ -206,7 +230,7 @@ fun SendChatItem(){
                     .padding(vertical = 15.dp, horizontal = 10.dp)
                 )
             HeightSpacer(height = 5.dp)
-            Text(text = "3:09 pm",
+            Text(text = formatTimestamp(item.timeStamp?: 0L),
                 color = Color.Gray,
                 fontSize = 8.sp,
                 textAlign = TextAlign.Start,
@@ -219,7 +243,7 @@ fun SendChatItem(){
 }
 
 @Composable
-fun ReceiveChatItem(){
+fun ReceiveChatItem(item: MessageModel) {
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
@@ -231,7 +255,7 @@ fun ReceiveChatItem(){
                 .fillMaxWidth(fraction = 0.8f)
                 .align(Alignment.CenterStart)
         ) {
-            Text(text = "Hey, What’s Up?",
+            Text(text = item.text?: "",
                 color = Color.Black,
                 textAlign = TextAlign.Start,
                 modifier = Modifier
@@ -240,7 +264,7 @@ fun ReceiveChatItem(){
                     .padding(vertical = 15.dp, horizontal = 10.dp)
             )
             HeightSpacer(height = 5.dp)
-            Text(text = "3:09 pm",
+            Text(text = formatTimestamp(item.timeStamp?: 0L),
                 color = Color.Gray,
                 fontSize = 8.sp,
                 textAlign = TextAlign.End,
